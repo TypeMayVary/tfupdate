@@ -25,6 +25,9 @@ type Option struct {
 	// a new version constraint
 	version string
 
+	// a new git reference constraint
+	ref string
+
 	// platforms is a list of target platforms to generate hash values.
 	// Target platform names consist of an operating system and a CPU
 	// architecture such as darwin_arm64.
@@ -46,7 +49,7 @@ type Option struct {
 }
 
 // NewOption returns an option.
-func NewOption(updateType string, name string, version string, platforms []string, recursive bool, ignorePaths []string, sourceMatchType string, tfregistryConfig tfregistry.Config) (Option, error) {
+func NewOption(updateType string, name string, version string, ref string, platforms []string, recursive bool, ignorePaths []string, sourceMatchType string, tfregistryConfig tfregistry.Config) (Option, error) {
 	regexps := make([]*regexp.Regexp, 0, len(ignorePaths))
 	for _, ignorePath := range ignorePaths {
 		if len(ignorePath) == 0 {
@@ -69,6 +72,7 @@ func NewOption(updateType string, name string, version string, platforms []strin
 		updateType:       updateType,
 		name:             name,
 		version:          version,
+		ref:              ref,
 		platforms:        platforms,
 		recursive:        recursive,
 		ignorePaths:      regexps,

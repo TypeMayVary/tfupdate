@@ -69,7 +69,7 @@ func (c *LockCommand) Run(args []string) int {
 		BaseURL: env.TFRegistryBaseURL,
 	}
 
-	option, err := tfupdate.NewOption("lock", "", "", c.platforms, c.recursive, c.ignorePaths, "", tfregistryConfig)
+	option, err := tfupdate.NewOption("lock", "", "", "", c.platforms, c.recursive, c.ignorePaths, "", tfregistryConfig)
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1

@@ -13,6 +13,7 @@ func TestNewOption(t *testing.T) {
 		updateType       string
 		name             string
 		version          string
+		ref              string
 		platforms        []string
 		recursive        bool
 		ignorePaths      []string
@@ -24,6 +25,7 @@ func TestNewOption(t *testing.T) {
 		{
 			updateType:       "terraform",
 			version:          "0.12.7",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{},
@@ -32,6 +34,7 @@ func TestNewOption(t *testing.T) {
 			want: Option{
 				updateType:       "terraform",
 				version:          "0.12.7",
+				ref:              "",
 				platforms:        []string{},
 				recursive:        true,
 				ignorePaths:      []*regexp.Regexp{},
@@ -44,6 +47,7 @@ func TestNewOption(t *testing.T) {
 			updateType:       "provider",
 			name:             "aws",
 			version:          "2.23.0",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{},
@@ -53,6 +57,7 @@ func TestNewOption(t *testing.T) {
 				updateType:       "provider",
 				name:             "aws",
 				version:          "2.23.0",
+				ref:              "",
 				platforms:        []string{},
 				recursive:        true,
 				ignorePaths:      []*regexp.Regexp{},
@@ -64,6 +69,7 @@ func TestNewOption(t *testing.T) {
 		{
 			updateType:       "terraform",
 			version:          "0.12.7",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{"hoge", "fuga"},
@@ -72,6 +78,7 @@ func TestNewOption(t *testing.T) {
 			want: Option{
 				updateType:       "terraform",
 				version:          "0.12.7",
+				ref:              "",
 				platforms:        []string{},
 				recursive:        true,
 				ignorePaths:      []*regexp.Regexp{regexp.MustCompile("hoge"), regexp.MustCompile("fuga")},
@@ -83,6 +90,7 @@ func TestNewOption(t *testing.T) {
 		{
 			updateType:       "terraform",
 			version:          "0.12.7",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{""},
@@ -91,6 +99,7 @@ func TestNewOption(t *testing.T) {
 			want: Option{
 				updateType:       "terraform",
 				version:          "0.12.7",
+				ref:              "",
 				platforms:        []string{},
 				recursive:        true,
 				ignorePaths:      []*regexp.Regexp{},
@@ -102,6 +111,7 @@ func TestNewOption(t *testing.T) {
 		{
 			updateType:       "terraform",
 			version:          "0.12.7",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{`\`},
@@ -113,6 +123,7 @@ func TestNewOption(t *testing.T) {
 		{
 			updateType:       "lock",
 			version:          "",
+			ref:              "",
 			platforms:        []string{"darwin_arm64", "darwin_amd64", "linux_amd64"},
 			recursive:        true,
 			ignorePaths:      []string{},
@@ -121,6 +132,7 @@ func TestNewOption(t *testing.T) {
 			want: Option{
 				updateType:       "lock",
 				version:          "",
+				ref:              "",
 				platforms:        []string{"darwin_arm64", "darwin_amd64", "linux_amd64"},
 				recursive:        true,
 				ignorePaths:      []*regexp.Regexp{},
@@ -133,6 +145,7 @@ func TestNewOption(t *testing.T) {
 			updateType:       "module",
 			name:             "terraform-aws-modules/vpc/aws",
 			version:          "0.12.7",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{},
@@ -142,6 +155,7 @@ func TestNewOption(t *testing.T) {
 				updateType:       "module",
 				name:             "terraform-aws-modules/vpc/aws",
 				version:          "0.12.7",
+				ref:              "",
 				platforms:        []string{},
 				recursive:        true,
 				ignorePaths:      []*regexp.Regexp{},
@@ -154,6 +168,7 @@ func TestNewOption(t *testing.T) {
 			updateType:       "module",
 			name:             `terraform-aws-modules\.git/vpc/aws`,
 			version:          "0.12.7",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{},
@@ -163,6 +178,7 @@ func TestNewOption(t *testing.T) {
 				updateType:       "module",
 				name:             `terraform-aws-modules\.git/vpc/aws`,
 				version:          "0.12.7",
+				ref:              "",
 				platforms:        []string{},
 				recursive:        true,
 				ignorePaths:      []*regexp.Regexp{},
@@ -175,6 +191,7 @@ func TestNewOption(t *testing.T) {
 			updateType:       "module",
 			name:             "",
 			version:          "0.12.7",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{},
@@ -186,6 +203,7 @@ func TestNewOption(t *testing.T) {
 			updateType:       "module",
 			name:             `\`,
 			version:          "0.12.7",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{},
@@ -197,6 +215,7 @@ func TestNewOption(t *testing.T) {
 			updateType:       "module",
 			name:             "",
 			version:          "0.12.7",
+			ref:              "",
 			platforms:        []string{},
 			recursive:        true,
 			ignorePaths:      []string{},
@@ -207,7 +226,7 @@ func TestNewOption(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		got, err := NewOption(tc.updateType, tc.name, tc.version, tc.platforms, tc.recursive, tc.ignorePaths, tc.sourceMatchType, tc.tfregistryConfig)
+		got, err := NewOption(tc.updateType, tc.name, tc.version, tc.ref, tc.platforms, tc.recursive, tc.ignorePaths, tc.sourceMatchType, tc.tfregistryConfig)
 		if tc.ok && err != nil {
 			t.Errorf("NewOption() with updateType = %s, name = %s, version = %s, platforms = %#v, recursive = %t, ignorePath = %#v returns unexpected err: %+v", tc.updateType, tc.name, tc.version, tc.platforms, tc.recursive, tc.ignorePaths, err)
 		}

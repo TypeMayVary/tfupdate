@@ -16,6 +16,7 @@ type ModuleCommand struct {
 	Meta
 	name            string
 	version         string
+	reference       string
 	path            string
 	recursive       bool
 	ignorePaths     []string
@@ -26,6 +27,7 @@ type ModuleCommand struct {
 func (c *ModuleCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("module", flag.ContinueOnError)
 	cmdFlags.StringVarP(&c.version, "version", "v", "", "A new version constraint")
+	cmdFlags.StringVarP(&c.reference, "ref", "R", "", "A new reference constraint")
 	cmdFlags.BoolVarP(&c.recursive, "recursive", "r", false, "Check a directory recursively")
 	cmdFlags.StringArrayVarP(&c.ignorePaths, "ignore-path", "i", []string{}, "A regular expression for path to ignore")
 	cmdFlags.StringVar(&c.sourceMatchType, "source-match-type", "full", "Define how to match module source URLs. Valid values are \"full\" or \"regex\".")
@@ -44,16 +46,23 @@ func (c *ModuleCommand) Run(args []string) int {
 	c.name = cmdFlags.Arg(0)
 	c.path = cmdFlags.Arg(1)
 
+	r := c.reference
 	v := c.version
-	if len(v) == 0 {
+
+	if len(v) == 0 && len(r) == 0 {
 		// For modules, automatic latest version resolution is not simple.
 		// To implement, we will probably need to get information from the Terraform Registry.
-		c.UI.Error("A new version constraint is required. Automatic latest version resolution is not currently supported for modules.")
+		c.UI.Error("A new version or ref constraint is required. Automatic latest version resolution is not currently supported for modules.")
+		return 1
+	}
+
+	if len(v) != 0 && len(r) != 0 {
+		c.UI.Error("Only one of version or ref can be specified.")
 		return 1
 	}
 
 	log.Printf("[INFO] Update module %s to %s", c.name, v)
-	option, err := tfupdate.NewOption("module", c.name, v, []string{}, c.recursive, c.ignorePaths, c.sourceMatchType, tfregistry.Config{})
+	option, err := tfupdate.NewOption("module", c.name, v, r, []string{}, c.recursive, c.ignorePaths, c.sourceMatchType, tfregistry.Config{})
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1
@@ -88,8 +97,11 @@ Arguments
   PATH               A path of file or directory to update
 
 Options:
-  -v  --version       A new version constraint (required)
+  -v  --version       A new Terraform registry version constraint.
+					  Required if --ref is not set.
                       Automatic latest version resolution is not currently supported for modules.
+  -R  --ref		   	  A new Git ref (branch, tag, commit SHA) for Git repository module sources.
+					  Required if --version is not set.
   -r  --recursive     Check a directory recursively (default: false)
   -i  --ignore-path   A regular expression for path to ignore
                       If you want to ignore multiple directories, set the flag multiple times.

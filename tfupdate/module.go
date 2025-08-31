@@ -16,29 +16,31 @@ import (
 // parse version. Note that a git reference can be branch name, so we need to
 // check if it seems to be a version number.
 // https://www.terraform.io/docs/modules/sources.html
-var moduleSourceRegexp = regexp.MustCompile(`(.+)\?ref=v([0-9]+(\.[0-9]+)*(-.*)*)`)
+var moduleSourceRegexp = regexp.MustCompile(`(.+)\?ref=([A-Za-z0-9_\/-][A-Za-z0-9._\/-]+)`)
 
 // ModuleUpdater is a updater implementation which updates the module version constraint.
 type ModuleUpdater struct {
 	name      string
 	nameRegex *regexp.Regexp
 	version   string
+	ref       string
 }
 
 // NewModuleUpdater is a factory method which returns an ModuleUpdater instance.
-func NewModuleUpdater(name string, version string, nameRegex *regexp.Regexp) (Updater, error) {
+func NewModuleUpdater(name string, version string, ref string, nameRegex *regexp.Regexp) (Updater, error) {
 	if len(name) == 0 {
 		return nil, errors.Errorf("failed to new module updater. name is required")
 	}
 
-	if len(version) == 0 {
-		return nil, errors.Errorf("failed to new module updater. version is required")
+	if len(version) == 0 && len(ref) == 0 {
+		return nil, errors.Errorf("failed to new module updater. version or ref is required")
 	}
 
 	return &ModuleUpdater{
 		name:      name,
 		nameRegex: nameRegex,
 		version:   version,
+		ref:       ref,
 	}, nil
 }
 
@@ -69,14 +71,23 @@ func (u *ModuleUpdater) updateModuleBlock(f *hclwrite.File) error {
 				if len(version) == 0 {
 					// The source attribute doesn't have a version number.
 					// Set a version to attribute value only if the version key exists.
-					if m.Body().GetAttribute("version") != nil {
+					if m.Body().GetAttribute("version") != nil && len(u.version) != 0 {
 						m.Body().SetAttributeValue("version", cty.StringVal(u.version))
 					}
 					continue
 				}
 				// The source attribute has a version number.
 				// Update a version reference in the source value.
-				newSourceValue := name + `?ref=v` + u.version
+				var newSourceValue string
+
+				if len(u.ref) != 0 {
+					newSourceValue = name + `?ref=v` + u.version
+				}
+
+				if len(u.version) != 0 {
+					newSourceValue = name + `?ref=` + u.ref
+				}
+
 				m.Body().SetAttributeValue("source", cty.StringVal(newSourceValue))
 			}
 		}

@@ -57,7 +57,7 @@ func (c *OpenTofuCommand) Run(args []string) int {
 	}
 
 	log.Printf("[INFO] Update opentofu to %s", v)
-	option, err := tfupdate.NewOption("opentofu", "", v, []string{}, c.recursive, c.ignorePaths, "", tfregistry.Config{})
+	option, err := tfupdate.NewOption("opentofu", "", v, "", []string{}, c.recursive, c.ignorePaths, "", tfregistry.Config{})
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1

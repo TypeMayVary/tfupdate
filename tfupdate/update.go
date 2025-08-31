@@ -30,7 +30,7 @@ func NewUpdater(o Option) (Updater, error) {
 	case "provider":
 		return NewProviderUpdater(o.name, o.version)
 	case "module":
-		return NewModuleUpdater(o.name, o.version, o.nameRegex)
+		return NewModuleUpdater(o.name, o.version, o.ref, o.nameRegex)
 	case "lock":
 		return NewLockUpdater(o.platforms, o.tfregistryConfig)
 	default:

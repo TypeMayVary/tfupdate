@@ -15,6 +15,7 @@ func TestNewModuleUpdater(t *testing.T) {
 		name            string
 		sourceMatchType string
 		version         string
+		ref             string
 		want            Updater
 		ok              bool
 	}{
@@ -22,10 +23,25 @@ func TestNewModuleUpdater(t *testing.T) {
 			name:            "terraform-aws-modules/vpc/aws",
 			sourceMatchType: "full",
 			version:         "2.17.0",
+			ref:             "",
 			want: &ModuleUpdater{
 				name:      "terraform-aws-modules/vpc/aws",
 				nameRegex: nil,
 				version:   "2.17.0",
+				ref:       "",
+			},
+			ok: true,
+		},
+		{
+			name:            "git::https://example.com/vpc.git?ref=branch/development",
+			sourceMatchType: "full",
+			version:         "",
+			ref:             "branch/main",
+			want: &ModuleUpdater{
+				name:      "git::https://example.com/vpc.git?ref=branch/main",
+				nameRegex: nil,
+				version:   "",
+				ref:       "branch/main",
 			},
 			ok: true,
 		},
@@ -33,6 +49,7 @@ func TestNewModuleUpdater(t *testing.T) {
 			name:            "",
 			sourceMatchType: "full",
 			version:         "2.17.0",
+			ref:             "",
 			want:            nil,
 			ok:              false,
 		},
@@ -40,13 +57,14 @@ func TestNewModuleUpdater(t *testing.T) {
 			name:            "terraform-aws-modules/vpc/aws",
 			sourceMatchType: "full",
 			version:         "",
+			ref:             "",
 			want:            nil,
 			ok:              false,
 		},
 	}
 
 	for _, tc := range cases {
-		got, err := NewModuleUpdater(tc.name, tc.version, nil)
+		got, err := NewModuleUpdater(tc.name, tc.version, tc.ref, nil)
 		if tc.ok && err != nil {
 			t.Errorf("NewModuleUpdater() with name = %s, version = %s returns unexpected err: %+v", tc.name, tc.version, err)
 		}
@@ -68,6 +86,7 @@ func TestUpdateModule(t *testing.T) {
 		name            string
 		sourceMatchType string
 		version         string
+		ref             string
 		want            string
 		ok              bool
 	}{
@@ -81,6 +100,7 @@ module "vpc" {
 `,
 			name:            "terraform-aws-modules/vpc/aws",
 			version:         "2.18.0",
+			ref:             "",
 			sourceMatchType: "full",
 			want: `
 module "vpc" {
@@ -104,6 +124,7 @@ module "vpc2" {
 `,
 			name:            "terraform-aws-modules/vpc/aws",
 			version:         "2.18.0",
+			ref:             "",
 			sourceMatchType: "full",
 			want: `
 module "vpc1" {
@@ -128,6 +149,7 @@ module "vpc" {
 			name:            "terraform-aws-modules/hoge/aws",
 			sourceMatchType: "full",
 			version:         "2.18.0",
+			ref:             "",
 			want: `
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -146,6 +168,7 @@ module "vpc" {
 			name:            "terraform-aws-modules/vpc/aws",
 			sourceMatchType: "full",
 			version:         "2.18.0",
+			ref:             "",
 			want: `
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
@@ -184,6 +207,7 @@ module "vpc2" {
 `,
 			name:            "terraform-aws-modules.git/",
 			version:         "2.18.0",
+			ref:             "",
 			sourceMatchType: "regex",
 			want: `
 module "vpc1" {
@@ -262,6 +286,7 @@ func TestParseModuleSource(t *testing.T) {
 		src     string
 		name    string
 		version string
+		ref     string
 	}{
 		{
 			src: `
@@ -271,6 +296,7 @@ module "vpc" {
 `,
 			name:    "git::https://example.com/vpc.git",
 			version: "",
+			ref:     "",
 		},
 		{
 			src: `
@@ -279,7 +305,8 @@ module "vpc" {
 }
 `,
 			name:    "git::https://example.com/vpc.git",
-			version: "1",
+			version: "v1",
+			ref:     "",
 		},
 		{
 			src: `
@@ -289,6 +316,7 @@ module "vpc" {
 `,
 			name:    "git::https://example.com/vpc.git",
 			version: "1.2",
+			ref:     "",
 		},
 		{
 			src: `
@@ -298,6 +326,7 @@ module "vpc" {
 `,
 			name:    "git::https://example.com/vpc.git",
 			version: "1.2.0",
+			ref:     "",
 		},
 		{
 			src: `
@@ -307,15 +336,17 @@ module "vpc" {
 `,
 			name:    "git::https://example.com/vpc.git",
 			version: "1.2.0-rc1",
+			ref:     "",
 		},
 		{
 			src: `
 module "vpc" {
-  source = "git::https://example.com/vpc.git?ref=vhoge"
+  source = "git::https://example.com/vpc.git?ref=."
 }
 `,
-			name:    "git::https://example.com/vpc.git?ref=vhoge",
+			name:    "git::https://example.com/vpc.git?ref=.",
 			version: "",
+			ref:     "",
 		},
 	}
 

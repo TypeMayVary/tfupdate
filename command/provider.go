@@ -66,7 +66,7 @@ func (c *ProviderCommand) Run(args []string) int {
 	}
 
 	log.Printf("[INFO] Update provider %s to %s", c.name, v)
-	option, err := tfupdate.NewOption("provider", c.name, v, []string{}, c.recursive, c.ignorePaths, "", tfregistry.Config{})
+	option, err := tfupdate.NewOption("provider", c.name, v, "", []string{}, c.recursive, c.ignorePaths, "", tfregistry.Config{})
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1
